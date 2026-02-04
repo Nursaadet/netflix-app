@@ -21,9 +21,10 @@ const MovieCard = ({ poster_path, vote_average, id }) => {
         width={160}
         height={240}
       />
-      <span className="absolute bottom-1 right-1 text-white font-semibold z-10">
-        {vote_average.toFixed(1)}
-      </span>
+      <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded-md">
+  {vote_average.toFixed(1)}
+</span>
+
     </div>
   );
 };
