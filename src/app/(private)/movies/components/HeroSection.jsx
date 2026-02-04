@@ -6,7 +6,7 @@ import { PlayIcon } from "@heroicons/react/24/solid";
 
 const HeroSection = async ({ id, title, overview }) => {
   const videoKey = await getVideoKey(id);
-  console.log(videoKey);
+//   console.log(videoKey);
   return (
     <div className="relative h-[50vw]">
       <VideoSection videoKey={videoKey} />
