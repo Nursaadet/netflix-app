@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -13,9 +14,12 @@ const MovieCard = ({ poster_path, vote_average, id }) => {
       className="w-40 h-[240px] relative cursor-pointer "
       onClick={() => router.push("/movies/" + id)}
     >
-      <img
+      {/* //? Next.js, import edilen dosyaya göre image genişliğini ve yüksekliğini otomatik olarak belirler ancak Next.js'nin build işlemi sırasında remote dosyalara erişimi olmadığından, genişlik ve yükseklik özelliklerini manuel olarak sağlamanız gerekir. */}
+      <Image
         src={poster_path ? IMG_API + poster_path : defaultImage}
         alt="movie-card"
+        width={160}
+        height={240}
       />
       <span className="absolute bottom-1 right-1 text-white font-semibold z-10">
         {vote_average.toFixed(1)}
