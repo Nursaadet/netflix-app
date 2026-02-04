@@ -1,7 +1,11 @@
 import { BackspaceIcon } from "@heroicons/react/24/solid";
 import React from "react";
 import VideoSection from "../components/VideoSection";
-import { getMovieDetail, getVideoKey } from "@/helpers/movieFunctions";
+import {
+  getMovieDetail,
+  getMovies,
+  getVideoKey,
+} from "@/helpers/movieFunctions";
 import Link from "next/link";
 
 const MovieDetail = async ({ params: { movieId } }) => {
@@ -34,4 +38,17 @@ export async function generateMetadata({ params: { movieId } }) {
     title: movieDetails.title,
     description: `This is the page of ${movieDetails.title}`,
   };
+}
+
+export async function generateStaticParams() {
+  const [movies1, movies2, movies3, movies4] = await Promise.all([
+    getMovies("now_playing"),
+    getMovies("popular"),
+    getMovies("top_rated"),
+    getMovies("upcoming"),
+  ]);
+
+  return [...movies1, ...movies2, ...movies3, ...movies4].map((movie) => ({
+    movieId: movie.id.toString(),
+  }));
 }
