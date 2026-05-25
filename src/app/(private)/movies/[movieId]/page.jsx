@@ -9,10 +9,25 @@ import {
 import Link from "next/link";
 
 const MovieDetail = async ({ params: { movieId } }) => {
-  const videoKey = await getVideoKey(movieId);
-  const movieDetails = await getMovieDetail(movieId);
-  console.log(movieDetails);
+  // Sayfa verisi çekilirken hata oluşursa uygulamanın tamamen çökmesini engelliyoruz
+  let videoKey = null;
+  let movieDetails = null;
+
+  try {
+    videoKey = await getVideoKey(movieId);
+    movieDetails = await getMovieDetail(movieId);
+  } catch (error) {
+    console.error(`MovieDetail (${movieId}) yüklenirken hata oluştu:`, error);
+  }
+
+  if (!movieDetails) {
+    return (
+      <div className="text-center text-white py-10">Film detayları yüklenemedi.</div>
+    );
+  }
+
   const { title } = movieDetails;
+  
   return (
     <div className="md:container px-10 mx-auto py-5">
       <h1 className="text-center text-white text-3xl">{title}</h1>
@@ -33,22 +48,52 @@ const MovieDetail = async ({ params: { movieId } }) => {
 export default MovieDetail;
 
 export async function generateMetadata({ params: { movieId } }) {
-  const movieDetails = await getMovieDetail(movieId);
-  return {
-    title: movieDetails.title,
-    description: `This is the page of ${movieDetails.title}`,
-  };
+  try {
+    const movieDetails = await getMovieDetail(movieId);
+    return {
+      title: movieDetails?.title || "Movie Detail",
+      description: movieDetails?.title ? `This is the page of ${movieDetails.title}` : "Movie description",
+    };
+  } catch (error) {
+    return {
+      title: "Movie Detail",
+    };
+  }
 }
 
 export async function generateStaticParams() {
-  const [movies1, movies2, movies3, movies4] = await Promise.all([
-    getMovies("now_playing"),
-    getMovies("popular"),
-    getMovies("top_rated"),
-    getMovies("upcoming"),
-  ]);
+  try {
+    // Tüm istekleri paralel olarak atıyoruz
+    const [movies1, movies2, movies3, movies4] = await Promise.all([
+      getMovies("now_playing").catch(() => []),
+      getMovies("popular").catch(() => []),
+      getMovies("top_rated").catch(() => []),
+      getMovies("upcoming").catch(() => []),
+    ]);
 
-  return [...movies1, ...movies2, ...movies3, ...movies4].map((movie) => ({
-    movieId: movie.id.toString(),
-  }));
+    // Gelen verilerin dizi (array) olduğundan emin oluyoruz, null/undefined ise boş dizi kabul ediyoruz
+    const allMovies = [
+      ...(Array.isArray(movies1) ? movies1 : []),
+      ...(Array.isArray(movies2) ? movies2 : []),
+      ...(Array.isArray(movies3) ? movies3 : []),
+      ...(Array.isArray(movies4) ? movies4 : []),
+    ];
+
+    // Eğer hiçbir film dönmediyse build'ın çökmesini engellemek için boş array dönüyoruz
+    if (allMovies.length === 0) {
+      console.warn("generateStaticParams: Hiçbir film verisi çekilemedi. Çevre değişkenlerini kontrol edin!");
+      return [];
+    }
+
+    // movie.id değerinin varlığını kontrol ederek map'liyoruz
+    return allMovies
+      .filter(movie => movie && movie.id)
+      .map((movie) => ({
+        movieId: movie.id.toString(),
+      }));
+
+  } catch (error) {
+    console.error("generateStaticParams genel hata:", error);
+    return []; // Hata durumunda build'ın durmaması için boş array dönüyoruz
+  }
 }
